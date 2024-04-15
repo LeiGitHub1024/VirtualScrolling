@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  
+  <div class="container">
+    <div id="itemCount"></div>
+    <div class="view">
+      <div class="slide-container">
+        <!-- 这里是具体的内容 -->
+      </div>
+    </div>
+  </div>
+  <script src="utils.js"></script>
+  <script>
+    let items = Array.from({length: 1000000}).map((_, i) => `${i}`);
+    const container = document.querySelector('.slide-container');
+    const itemCountDisplay = document.getElementById('itemCount');
+    const buffer = 20; // 缓冲区大小
+    itemCountDisplay.textContent = `Items Count: ${items.length}`;
+
+    items.forEach((_, index) => {
+      const placeholder = document.createElement('div');
+      placeholder.dataset.index = index; // Store index on the element for reference
+      placeholder.classList.add('item-placeholder'); // Assume you have styles for this
+      container.appendChild(placeholder);
+    });
+
+    let scrollTimeout = null; // 用来存储延时器ID
+
+    function freshData(){
+      const scrollLeft = container.scrollLeft;      
+      const containerWidth = container.clientWidth;
+      const firstVisibleIndex = Math.floor(scrollLeft / 100 ) - buffer; // 每个项的宽度是 100px
+      const lastVisibleIndex = Math.ceil((scrollLeft + containerWidth) / 100) + buffer;
+
+      // 打印当前显示的项的索引范围
+      console.log(`Visible items: ${firstVisibleIndex} to ${lastVisibleIndex}`)
+      document.querySelectorAll('.item-placeholder').forEach((element, index) => {
+        if (index >= firstVisibleIndex && index <= lastVisibleIndex) {
+          if (!element.querySelector('img')) { // 检查是否已加载图片
+            let img = document.createElement('img');
+            img.src = `https://s11.ax1x.com/2023/01/30/pSdWF7F.png`; 
+            img.style.height = "100%";
+            img.style.objectFit = "cover";
+            element.appendChild(img);
+          }
+          element.classList.add('item-active');
+        } else {
+          element.classList.remove('item-active');
+          let img = element.querySelector('img');
+          if (img) { // 如果存在图片则移除，防止占用过多内存
+            element.removeChild(img);
+          }
+        }
+      });
+    }
+    freshData(); // 初始化时加载一次
+    const handleScroll = throttle(function() {
+      freshData();
+      if (scrollTimeout !== null) {clearTimeout(scrollTimeout)}
+      scrollTimeout = setTimeout(handleScrollEnd, 500); // 150ms后无新的滑动事件，认为滑动结束
+    }, 250); // 250ms 的节流，防止滚动时频繁触发
+
+    // 监听横向滚动偏移量
+    container.addEventListener('scroll',handleScroll);
+
+    const handleScrollEnd = () => {
+      console.log("handleScrollEnd🌟");
+      handleScroll();
+    };
+
+
+  </script>
+</body>
+</html>
